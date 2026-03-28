@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 210mm; height: 297mm;
+    background: #1a1a2e;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 5mm 4mm 3mm;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  h1 {
+    color: #fff; font-size: 13px; letter-spacing: 2px;
+    margin-bottom: 1mm; text-align: center;
+  }
+  h1 span { color: #ffd600; }
+  .mermaid {
+    width: 100%; flex: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mermaid svg { max-width: 100%; max-height: 100%; }
+  .footer {
+    color: #90a4ae; font-size: 7px; text-align: center;
+    margin-top: 1mm;
+  }
+</style>
+</head>
+<body>
+  <h1>テレアポ分岐フロー ─ <span>強制実行ナビ v3 ─ 取りこぼしゼロ設計</span></h1>
+  <div class="mermaid">
+flowchart TD
+    classDef default fill:#16213e,stroke:#334,color:#fff,font-size:10px
+    classDef green fill:#1b5e20,stroke:#00e676,color:#00e676,font-weight:bold
+    classDef red fill:#4a0e0e,stroke:#ff1744,color:#ff1744,font-weight:bold
+    classDef yellow fill:#3e2e00,stroke:#ffd600,color:#ffd600,font-weight:bold
+    classDef blue fill:#0d2744,stroke:#448aff,color:#448aff,font-weight:bold
+    classDef action fill:#16213e,stroke:#546e7a,color:#cfd8dc,font-size:9px
+    classDef ng fill:#3a0a0a,stroke:#ff1744,color:#ff8a80,font-size:9px
+    classDef fail fill:#4a0e0e,stroke:#ff5252,color:#ff8a80,font-weight:bold
+    classDef recall fill:#1a237e,stroke:#82b1ff,color:#82b1ff,font-weight:bold
+
+```
+LIST["📋 リスト"]:::blue
+SCORE["📊 スコアリング"]:::blue
+HYPOTHESIS["💡 仮説構築"]:::blue
+
+CALLGATE{"🚦 CALL判定\n━━━━━━━━━━━\n✅ スコア70以上？\n✅ 矛盾あり？\n✅ 直近トリガーあり？\n━━━━━━━━━━━\n採用/SNS投稿\nレビュー増/組織変更"}:::yellow
+
+CALL["📞 コール開始"]:::blue
+SKIP["⏭ スキップ\n条件未達→次リスト"]:::action
+
+FIRST["🎯 初回接触 10秒\n━━━━━━━━━━━━\n❌ 営業感を出すな\n━━━━━━━━━━━━\n💬 営業じゃなくて\n一点だけ確認です\n💬 〇〇ですよね？"]:::blue
+
+FAIL10["💀 10秒失敗\n営業感/違和感\n→ 即終了"]:::fail
+
+JUDGE{"🔍 相手の反応は？\n反応ベースで判断"}
+
+A["🟢 A：食いつきあり\n━━━━━━━━━━━━\n⚡ 売るな、広げろ\n━━━━━━━━━━━━\n💬 今どうされてます？\n💬 取りこぼしてますよね？\n💬 事例1つだけ共有します"]:::green
+
+B["🔴 B：無関心\n━━━━━━━━━━━━\n⚡ 追うな\n💬 失礼しました、\nまたタイミング見ます\n🚫 即終了"]:::red
+
+C["🟡 C：否定/仮説ズレ\n━━━━━━━━━━━━\n⚡ 戦うな\n💬 失礼しました、\n認識違いでした\n🔄 即撤退"]:::yellow
+
+ANEXT{"🟢 Aの次の動き"}:::green
+
+A_DETAIL["🎤 相手に言わせる\n━━━━━━━━━━━━\nこちらから提案しない\n━━━━━━━━━━━━\n💬 どうしたいですか？\n💬 何があれば判断\nできますか？\n━━━━━━━━━━━━\n→ 相手の言葉で\n次ステップ確定"]:::green
+
+A_HOLD["⏸ 保留\n相手が迷っている\n→ 期限切って再連絡"]:::yellow
+
+LOG["📝 ログ 3項目\n① 刺さった仮説\n② 反応 A/B/C\n③ 業種"]:::action
+
+RECALLGATE{"🔄 再コール判定\n━━━━━━━━━━━\n対象：\n・A_HOLD（保留）\n・B＋違和感あり"}:::recall
+
+RECALL["📞 再コール\n━━━━━━━━━━━\n⏰ 3日以内に実行\n━━━━━━━━━━━\n仮説を修正して\n再アプローチ"]:::recall
+
+CLOSE["✅ 完了\n対象外→リスト戻し"]:::action
+
+NG["⛔ NG やったら負け\n✕ 説明し始める\n✕ 売り込む\n✕ 粘る"]:::ng
+
+LIST --> SCORE --> HYPOTHESIS --> CALLGATE
+CALLGATE -->|"トリガーあり ✅"| CALL
+CALLGATE -->|"条件未達 ❌"| SKIP
+SKIP -.->|"次のリストへ"| LIST
+CALL --> FIRST
+FIRST -->|"OK 突破"| JUDGE
+FIRST -->|"失敗 💀"| FAIL10
+FAIL10 --> LOG
+JUDGE -->|"反応あり 🟢"| A
+JUDGE -->|"無反応 🔴"| B
+JUDGE -->|"否定 🟡"| C
+A --> ANEXT
+ANEXT -->|"相手が動いた 🟢"| A_DETAIL
+ANEXT -->|"迷い中 🟡"| A_HOLD
+A_DETAIL --> LOG
+A_HOLD --> LOG
+B --> LOG
+C --> LOG
+
+LOG --> RECALLGATE
+RECALLGATE -->|"回収対象あり\nA_HOLD / B+違和感"| RECALL
+RECALLGATE -->|"対象外"| CLOSE
+RECALL -->|"3日以内"| FIRST
+CLOSE -.->|"次のリストへ"| LIST
+
+NG -.-x|"違反"| FIRST
+NG -.-x|"違反"| A
+NG -.-x|"違反"| B
+NG -.-x|"違反"| C
+```
+
+  </div>
+  <div class="footer">👉 取りこぼしゼロ設計 ─ 一発で決めない、回収前提の営業構造 ─ 色で判断（🟢進め / 🔴切れ / 🟡様子見 / 🔵再コール） ─ 考えるな、従え</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#16213e',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#448aff',
+        lineColor: '#546e7a',
+        fontFamily: 'Segoe UI, sans-serif',
+        fontSize: '10px',
+      },
+      flowchart: {
+        curve: 'basis',
+        padding: 6,
+        nodeSpacing: 16,
+        rankSpacing: 20,
+        htmlLabels: true,
+      }
+    });
+  </script>
+
+</body>
+</html>
