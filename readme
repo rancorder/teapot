@@ -1,0 +1,125 @@
+# テレアポ分岐フロー ─ 強制実行ナビ v3
+
+> **取りこぼしゼロ設計** ─ 一発で決めない、回収前提の営業構造
+
+## コンセプト
+
+- これは資料ではなく **「現場で使う判断装置」**
+- オペレーターの思考を奪う ─ 迷う余地ゼロ
+- 色で判断：🟢進め / 🔴切れ / 🟡様子見 / 🔵再コール
+
+-----
+
+## フロー全体図
+
+```mermaid
+flowchart TD
+    classDef green fill:#1b5e20,stroke:#00e676,color:#00e676,font-weight:bold
+    classDef red fill:#4a0e0e,stroke:#ff1744,color:#ff1744,font-weight:bold
+    classDef yellow fill:#3e2e00,stroke:#ffd600,color:#ffd600,font-weight:bold
+    classDef blue fill:#0d2744,stroke:#448aff,color:#448aff,font-weight:bold
+    classDef action fill:#16213e,stroke:#546e7a,color:#cfd8dc
+    classDef ng fill:#3a0a0a,stroke:#ff1744,color:#ff8a80
+    classDef fail fill:#4a0e0e,stroke:#ff5252,color:#ff8a80,font-weight:bold
+    classDef recall fill:#1a237e,stroke:#82b1ff,color:#82b1ff,font-weight:bold
+
+    LIST["📋 リスト"]:::blue
+    SCORE["📊 スコアリング"]:::blue
+    HYPOTHESIS["💡 仮説構築"]:::blue
+
+    CALLGATE{"🚦 CALL判定<br/>━━━━━━━━━━━<br/>✅ スコア70以上？<br/>✅ 矛盾あり？<br/>✅ 直近トリガーあり？<br/>━━━━━━━━━━━<br/>採用/SNS投稿<br/>レビュー増/組織変更"}:::yellow
+
+    CALL["📞 コール開始"]:::blue
+    SKIP["⏭ スキップ<br/>条件未達→次リスト"]:::action
+
+    FIRST["🎯 初回接触 10秒<br/>━━━━━━━━━━━━<br/>❌ 営業感を出すな<br/>━━━━━━━━━━━━<br/>💬 営業じゃなくて<br/>一点だけ確認です<br/>💬 〇〇ですよね？"]:::blue
+
+    FAIL10["💀 10秒失敗<br/>営業感/違和感<br/>→ 即終了"]:::fail
+
+    JUDGE{"🔍 相手の反応は？<br/>反応ベースで判断"}
+
+    A["🟢 A：食いつきあり<br/>━━━━━━━━━━━━<br/>⚡ 売るな、広げろ<br/>━━━━━━━━━━━━<br/>💬 今どうされてます？<br/>💬 取りこぼしてますよね？<br/>💬 事例1つだけ共有します"]:::green
+
+    B["🔴 B：無関心<br/>━━━━━━━━━━━━<br/>⚡ 追うな<br/>💬 失礼しました、<br/>またタイミング見ます<br/>🚫 即終了"]:::red
+
+    C["🟡 C：否定/仮説ズレ<br/>━━━━━━━━━━━━<br/>⚡ 戦うな<br/>💬 失礼しました、<br/>認識違いでした<br/>🔄 即撤退"]:::yellow
+
+    ANEXT{"🟢 Aの次の動き"}:::green
+
+    A_DETAIL["🎤 相手に言わせる<br/>━━━━━━━━━━━━<br/>こちらから提案しない<br/>━━━━━━━━━━━━<br/>💬 どうしたいですか？<br/>💬 何があれば判断<br/>できますか？<br/>━━━━━━━━━━━━<br/>→ 相手の言葉で<br/>次ステップ確定"]:::green
+
+    A_HOLD["⏸ 保留<br/>相手が迷っている<br/>→ 期限切って再連絡"]:::yellow
+
+    LOG["📝 ログ 3項目<br/>① 刺さった仮説<br/>② 反応 A/B/C<br/>③ 業種"]:::action
+
+    RECALLGATE{"🔄 再コール判定<br/>━━━━━━━━━━━<br/>対象：<br/>・A_HOLD（保留）<br/>・B＋違和感あり"}:::recall
+
+    RECALL["📞 再コール<br/>━━━━━━━━━━━<br/>⏰ 3日以内に実行<br/>━━━━━━━━━━━<br/>仮説を修正して<br/>再アプローチ"]:::recall
+
+    CLOSE["✅ 完了<br/>対象外→リスト戻し"]:::action
+
+    NG["⛔ NG やったら負け<br/>✕ 説明し始める<br/>✕ 売り込む<br/>✕ 粘る"]:::ng
+
+    LIST --> SCORE --> HYPOTHESIS --> CALLGATE
+    CALLGATE -->|"トリガーあり ✅"| CALL
+    CALLGATE -->|"条件未達 ❌"| SKIP
+    SKIP -.->|"次のリストへ"| LIST
+    CALL --> FIRST
+    FIRST -->|"OK 突破"| JUDGE
+    FIRST -->|"失敗 💀"| FAIL10
+    FAIL10 --> LOG
+    JUDGE -->|"反応あり 🟢"| A
+    JUDGE -->|"無反応 🔴"| B
+    JUDGE -->|"否定 🟡"| C
+    A --> ANEXT
+    ANEXT -->|"相手が動いた 🟢"| A_DETAIL
+    ANEXT -->|"迷い中 🟡"| A_HOLD
+    A_DETAIL --> LOG
+    A_HOLD --> LOG
+    B --> LOG
+    C --> LOG
+
+    LOG --> RECALLGATE
+    RECALLGATE -->|"回収対象あり<br/>A_HOLD / B+違和感"| RECALL
+    RECALLGATE -->|"対象外"| CLOSE
+    RECALL -->|"3日以内"| FIRST
+    CLOSE -.->|"次のリストへ"| LIST
+
+    NG -.-x|"違反"| FIRST
+    NG -.-x|"違反"| A
+    NG -.-x|"違反"| B
+    NG -.-x|"違反"| C
+```
+
+-----
+
+## 設計思想
+
+|原則        |内容                     |
+|----------|-----------------------|
+|**文章禁止**  |1要素＝1行、最大3行            |
+|**視線誘導固定**|上：状況 → 中：判断 → 下：次の一言   |
+|**色で判断**  |🟢緑＝進め / 🔴赤＝切れ / 🟡黄＝様子見 |
+|**回収前提**  |一発で決めず、3日以内再コールで取りこぼしゼロ|
+
+## NG行為（全フェーズ共通）
+
+- ✕ 説明し始める
+- ✕ 売り込む
+- ✕ 粘る
+
+> **これやったら負け確定**
+
+-----
+
+## ログ記録（3項目だけ）
+
+1. 刺さった仮説
+1. 反応タイプ（A / B / C）
+1. 業種
+
+> これ以上書くな ─ 3つで十分
+
+-----
+
+*考えるな、従え。*
